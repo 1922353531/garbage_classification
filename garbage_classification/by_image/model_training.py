@@ -136,15 +136,15 @@ def inception_resnet_v2_C(x_input, scale_residual=True):
         x = Activation("relu")(x)
     return x
 
-def reduction_resnet_v2_A(x_input, k=256, l=256, m=384, n=384):
+def reduction_resnet_v2_A(x_input):
     with K.name_scope('reduction_resnet_A'):
         ra1 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='valid')(x_input)
 
-        ra2 = Conv2D(n, (3, 3), activation='relu', strides=(2, 2), padding='valid')(x_input)
+        ra2 = Conv2D(384, (3, 3), activation='relu', strides=(2, 2), padding='valid')(x_input)
 
-        ra3 = Conv2D(k, (1, 1), activation='relu', padding='same')(x_input)
-        ra3 = Conv2D(l, (3, 3), activation='relu', padding='same')(ra3)
-        ra3 = Conv2D(m, (3, 3), activation='relu', strides=(2, 2), padding='valid')(ra3)
+        ra3 = Conv2D(256, (1, 1), activation='relu', padding='same')(x_input)
+        ra3 = Conv2D(256, (3, 3), activation='relu', padding='same')(ra3)
+        ra3 = Conv2D(384, (3, 3), activation='relu', strides=(2, 2), padding='valid')(ra3)
 
         merged_vector = concatenate([ra1, ra2, ra3], axis=-1)
 
@@ -182,7 +182,7 @@ def inception_resnet_v2(scale=True):
         # Output: 35 * 35 * 256
 
     # Reduction A
-    x = reduction_resnet_v2_A(x, k=256, l=256, m=384, n=384)  # Output: 17 * 17 * 896
+    x = reduction_resnet_v2_A(x)  # Output: 17 * 17 * 896
 
     # 10 x Inception B
     for i in range(10):
@@ -221,10 +221,10 @@ inception_resnet_v2_model.summary()
 
 try:
     inception_resnet_v2_model.fit_generator(datas_generator(data_setting.img_names, data_setting.img_labels, settings.batch_size), epochs=settings.epoches, steps_per_epoch=len(data_setting.img_labels)//(settings.batch_size))
-    # model.fit_generator(datas_generator(data_setting.images_datas, data_setting.labels_datas, start, settings.batch_size), epochs=settings.epochs, steps_per_epoch=len(data_setting.images_datas)//(settings.batch_size))
 except:
     inception_resnet_v2_model.save('Inception_Resnet_v2_Model.h5')
     print('Model training stopped early and the weights has been saved.')
-print('Model training completed.')
-inception_resnet_v2_model.save('Inception_Resnet_v2_Model.h5')
+else:
+    print('Model training completed.')
+    inception_resnet_v2_model.save('Inception_Resnet_v2_Model.h5')
 
